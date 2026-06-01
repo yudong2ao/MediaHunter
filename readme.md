@@ -114,11 +114,15 @@
 
 ## 🛠️ 常见问题与日志诊断 (FAQ)
 
-### Q1：点击“下载”按钮提示“下载失败”如何排查？
-请在部署目录下的 `logs/` 文件夹中打开错误日志，通常有以下三大最核心原因：
-* **找不到 FFmpeg**（日志含 `FFmpeg not found`）：未安装合并工具，导致音视频无法合成。请将 `ffmpeg.exe` 与 `ffprobe.exe` 放入部署目录中。
-* **网络代理不通**（日志含 `Failed to establish a new connection`）：如果无需代理，请在 `yt-dlp.conf` 中用 `#` 注释掉 `--proxy` 代理行。
-* **需要登录或 Cookie 失效**（日志含 `403 Forbidden` / `Sign in`）：Cookie 登录凭证过期。请先在对应浏览器中登录该视频网站。
+### Q1：提示“下载失败”，日志含 `FFmpeg not found` 怎么办？
+* **解决办法**：未配置音视频合并工具。请将 `ffmpeg.exe` 与 `ffprobe.exe` 直接放入部署同级目录中。
+
+### Q2：提示“下载失败”，日志含 `Failed to establish a new connection` 怎么办？
+* **解决办法**：本地网络代理不通。如果您不需要代理，请用记事本打开 `yt-dlp.conf` 并在 `--proxy` 行首添加 `#` 注释掉该行。
+
+### Q3：提示“下载失败”，日志含 `403 Forbidden` 或 `Sign in` 怎么办？
+* **解决办法**：视频网站的 Cookie 登录态过期。请先在对应浏览器中打开并登录该视频网站以刷新登录凭证。
+
 
 ---
 
