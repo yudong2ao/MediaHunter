@@ -43,7 +43,7 @@
 
 ### 📂 情况 A：如果您使用的是【全能集成包 (Full)】
 
-1. **解压部署**：直接将 `MediaHunter-Full.zip` 解压至本地任意目录（例如 `D:\MediaHunter\`）。
+1. **解压目录**：直接将 `MediaHunter-Full.zip` 解压至本地任意目录（例如 `D:\MediaHunter\`）。
 2. **启动服务**：双击解压目录下的 **`StartServer.vbs`**。本地网关将以隐藏窗口形式在后台启动。
    > [!WARNING]
    > **Windows 11 24H2 及以上系统的兼容性提示：**
@@ -62,7 +62,7 @@
    * **`yt-dlp` 下载引擎**：前往 [yt-dlp Github Release](https://github.com/yt-dlp/yt-dlp/releases) 下载最新版 `yt-dlp.exe`，并**手动将其路径配置进系统环境变量 `Path`**。
    * **音视频合并器 (FFmpeg)**：前往 [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) 下载并解压，同时将 `bin` 目录路径配置到系统环境变量 `Path` 中。
    * **JS 运行时 (可选)**：用于 YouTube 等站点的本地解密。直接从官方网站下载 Windows 安装包手动安装即可。
-3. **启动与启用**：同“情况 A”的 2、3 步，双击 **`StartServer.vbs`** 运行，并在浏览器油猴插件中安装前端脚本。
+3. **启动服务与脚本**：同“情况 A”的 2、3 步，双击 **`StartServer.vbs`** 运行，并在浏览器油猴插件中安装前端脚本。
 
 > [!TIP]
 > **🚀 配置开机自启 (可选)：**
