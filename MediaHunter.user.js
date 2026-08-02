@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         MediaHunter 媒体猎手 (V8.3.7 分辨率精准反向同步优化)
+// @name         MediaHunter 媒体猎手 (V8.3.9 分辨率同步与广告过滤优化)
 // @namespace    http://tampermonkey.net/
-// @version      8.3.7
-// @description  Strict rules for ghost resources. Intercept native payload. Extreme performance optimization with chunking and LRU cache. Local API Architecture integration. Auto-close on download success. Bulletproof MPD XML namespace and ISO-8601 duration parser. [V8.3.7] 优化 DOM 播放器反向同步分辨率的逻辑，实现多资源精准安全配对。
+// @version      8.3.9
+// @description  Strict rules for ghost resources. Intercept native payload. Extreme performance optimization with chunking and LRU cache. Local API Architecture integration. Auto-close on download success. Bulletproof MPD XML namespace and ISO-8601 duration parser. [V8.3.9] 优化分辨率反向同步阈值与媒体广告过滤阈值。
 // @author       yudong2ao & Gemini
 // @match        *://*/*
 // @grant        GM_setClipboard
@@ -552,7 +552,9 @@
                         width: 0,
                         height: 0,
                         resolution: resStr,
-                        title: video?.nameZh || video?.name || document.title
+                        title: video?.nameZh || video?.name || document.title,
+                        referer: window.location.href,
+                        origin: window.location.origin
                     });
                 }
             }
@@ -590,7 +592,7 @@
                 }
 
                 const isStream = ['m3u8', 'mpd', 'ts', 'flv'].includes(m.ext);
-                if (!isStream && (!hasDuration || m.duration <= 10)) {
+                if (!isStream && (!hasDuration || m.duration <= 5)) {
                     return true;
                 }
 
@@ -665,8 +667,8 @@
         if (!activeRes || !activeDuration || activeDuration <= 0) return;
         let videos = STATE.mediaList.filter(m => m.type === 'video' && !m.isPageUrl);
 
-        // 筛选出所有与当前正在播放的媒体时长相近（相差在 5 秒以内）的已嗅探资源
-        let candidates = videos.filter(m => m.duration > 0 && Math.abs(m.duration - activeDuration) <= 5);
+        // 筛选出所有与当前正在播放的媒体时长相近（相差在 1 秒以内）的已嗅探资源
+        let candidates = videos.filter(m => m.duration > 0 && Math.abs(m.duration - activeDuration) <= 1);
 
         // 当且仅当列表里有且仅有一个候选资源时，才进行分辨率反向同步
         if (candidates.length === 1) {
@@ -738,7 +740,9 @@
                         width: targetEl ? (targetEl.videoWidth || 0) : 0,
                         height: targetEl ? (targetEl.videoHeight || 0) : 0,
                         resolution: res,
-                        resGuessed: resGuessed
+                        resGuessed: resGuessed,
+                        referer: window.location.href,
+                        origin: window.location.origin
                     };
                 };
 
@@ -1087,7 +1091,9 @@
 
         const mediaItem = {
             url: url, type: getMediaType(format, url), ext: format.ext || (format.type ? format.type.split('/')[1] : 'unknown'),
-            duration: 0, width: 0, height: 0, resolution: '', resGuessed: false
+            duration: 0, width: 0, height: 0, resolution: '', resGuessed: false,
+            referer: window.location.href,
+            origin: window.location.origin
         };
 
         if (isKnown && mediaItem.ext !== 'm3u8' && mediaItem.ext !== 'mpd') return;
@@ -1347,13 +1353,13 @@
                 if (isAlt) {
                     let targetUrl = media.url;
                     let safeTitle = (media.title || "未命名媒体").replace(/[\r\n"'|&<>*:?/\\]/g, ' ').trim();
-                    const currentUrl = window.location.href;
-                    const currentOrigin = window.location.origin;
+                    const refererUrl = media.referer || window.location.href;
+                    const refererOrigin = media.origin || window.location.origin;
 
                     const asciiTargetUrl = targetUrl.replace(/[^\x00-\x7F]/g, c => encodeURIComponent(c));
-                    const asciiCurrentUrl = currentUrl.replace(/[^\x00-\x7F]/g, c => encodeURIComponent(c));
+                    const asciiRefererUrl = refererUrl.replace(/[^\x00-\x7F]/g, c => encodeURIComponent(c));
 
-                    const cmdArgs = `"${asciiTargetUrl}" --referer "${asciiCurrentUrl}" --add-header "Origin: ${currentOrigin}" --trim-filenames 200 -o "${safeTitle}_%(id)s.${downloadExt}"`;
+                    const cmdArgs = `"${asciiTargetUrl}" --referer "${asciiRefererUrl}" --add-header "Origin: ${refererOrigin}" --trim-filenames 200 -o "${safeTitle}_%(id)s.${downloadExt}"`;
 
                     GM_setClipboard(`yt-dlp ${cmdArgs}`);
                     media._copyText = "Copied";
@@ -1377,13 +1383,13 @@
             btnDl.onclick = (e) => {
                 let targetUrl = media.url;
                 let safeTitle = (media.title || "未命名媒体").replace(/[\r\n"'|&<>*:?/\\]/g, ' ').trim();
-                const currentUrl = window.location.href;
-                const currentOrigin = window.location.origin;
+                const refererUrl = media.referer || window.location.href;
+                const refererOrigin = media.origin || window.location.origin;
 
                 const asciiTargetUrl = targetUrl.replace(/[^\x00-\x7F]/g, c => encodeURIComponent(c));
-                const asciiCurrentUrl = currentUrl.replace(/[^\x00-\x7F]/g, c => encodeURIComponent(c));
+                const asciiRefererUrl = refererUrl.replace(/[^\x00-\x7F]/g, c => encodeURIComponent(c));
 
-                const cmdArgs = `"${asciiTargetUrl}" --referer "${asciiCurrentUrl}" --add-header "Origin: ${currentOrigin}" --trim-filenames 200 -o "${safeTitle}_%(id)s.${downloadExt}"`;
+                const cmdArgs = `"${asciiTargetUrl}" --referer "${asciiRefererUrl}" --add-header "Origin: ${refererOrigin}" --trim-filenames 200 -o "${safeTitle}_%(id)s.${downloadExt}"`;
 
                 GM_xmlhttpRequest({
                     method: "POST",
